@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Daily Tasks</title>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+    }
+  </style>
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 p-4 sm:p-8">
+  <div class="max-w-2xl mx-auto">
+
+    <!-- Header -->
+    <div class="text-center mb-8">
+      <h1 class="text-4xl sm:text-5xl font-bold text-white mb-2 drop-shadow-lg">Daily Tasks</h1>
+
+      <div class="flex items-center justify-center gap-2 text-white/90">
+        <i data-lucide="calendar" class="w-5 h-5"></i>
+        <p id="todayDate" class="text-lg"></p>
+      </div>
+    </div>
+
+    <!-- Main Card -->
+    <div class="bg-white rounded-3xl shadow-2xl p-6 sm:p-8 backdrop-blur-sm bg-opacity-95">
+
+      <!-- Progress Bar -->
+      <div class="mb-6 p-4 bg-gradient-to-r from-purple-100 to-pink-100 rounded-2xl">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-gray-700 font-semibold">Today's Progress</span>
+          <span id="progressText" class="text-2xl font-bold text-purple-600">0/0</span>
+        </div>
+
+        <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+          <div id="progressBar"
+               class="bg-gradient-to-r from-purple-500 to-pink-500 h-full rounded-full transition-all duration-500 ease-out"
+               style="width: 0%;">
+          </div>
+        </div>
+      </div>
+
+      <!-- Celebration -->
+      <div id="celebrationBox"
+        class="hidden mb-6 p-4 bg-gradient-to-r from-green-400 to-emerald-500 rounded-2xl text-white text-center animate-bounce">
+        <p class="text-xl font-bold">🎉 Awesome! All tasks completed! 🎉</p>
+        <p id="celebrationMsg" class="text-sm mt-1"></p>
+      </div>
+
+      <!-- Add Task -->
+      <div class="flex gap-2 mb-6">
+        <input id="taskInput"
+               type="text"
+               placeholder="Add a new task..."
+               class="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none transition-colors">
+
+        <button id="addBtn"
+                class="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105 flex items-center gap-2 font-semibold">
+          <i data-lucide="plus" class="w-5 h-5"></i>
+          Add
+        </button>
+      </div>
+
+      <!-- Task List -->
+      <div id="taskList" class="space-y-3"></div>
+
+      <!-- Footer Message -->
+      <div id="footerMessage" class="mt-6 pt-6 border-t-2 border-gray-100 text-center text-gray-600"></div>
+
+    </div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+
+    let tasks = [];
+
+    const todayDate = document.getElementById("todayDate");
+    const taskInput = document.getElementById("taskInput");
+    const addBtn = document.getElementById("addBtn");
+    const taskList = document.getElementById("taskList");
+    const footer = document.getElementById("footerMessage");
+    const progressText = document.getElementById("progressText");
+    const progressBar = document.getElementById("progressBar");
+    const celebrationBox = document.getElementById("celebrationBox");
+    const celebrationMsg = document.getElementById("celebrationMsg");
+
+    todayDate.innerText = new Date().toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric"
+    });
+
+    function addTask() {
+      const text = taskInput.value.trim();
+      if (!text) return;
+
+      tasks.push({
+        id: Date.now(),
+        text,
+        completed: false,
+      });
+
+      taskInput.value = "";
+      render();
+    }
+
+    function toggleTask(id) {
+      tasks = tasks.map(task =>
+        task.id === id ? { ...task, completed: !task.completed } : task
+      );
+      render();
+    }
+
+    function deleteTask(id) {
+      tasks = tasks.filter(task => task.id !== id);
+      render();
+    }
+
+    function render() {
+      taskList.innerHTML = "";
+
+      if (tasks.length === 0) {
+        taskList.innerHTML = `
+          <div class="text-center py-12 text-gray-400">
+            <p class="text-lg">No tasks yet! Add one to get started 🚀</p>
+          </div>`;
+      }
+
+      tasks.forEach(task => {
+        const row = document.createElement("div");
+
+        row.className =
+          "flex items-center gap-3 p-4 rounded-xl transition-all duration-300 " +
+          (task.completed
+            ? "bg-gray-50 border-2 border-green-200"
+            : "bg-white border-2 border-gray-200 hover:border-purple-300");
+
+        row.innerHTML = `
+          <button class="flex-shrink-0 hover:scale-110 transition-transform" onclick="toggleTask(${task.id})">
+            ${
+              task.completed
+                ? `<i data-lucide="check-circle-2" class="text-green-500 w-7 h-7"></i>`
+                : `<i data-lucide="circle" class="text-gray-400 w-7 h-7"></i>`
+            }
+          </button>
+
+          <span class="flex-1 text-lg ${
+            task.completed ? "line-through text-gray-400" : "text-gray-800"
+          }">${task.text}</span>
+
+          <button class="text-red-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-lg transition-all"
+                  onclick="deleteTask(${task.id})">
+            <i data-lucide="trash-2" class="w-5 h-5"></i>
+          </button>
+        `;
+
+        taskList.appendChild(row);
+      });
+
+      lucide.createIcons();
+      updateStats();
+    }
+
+    function updateStats() {
+      const total = tasks.length;
+      const done = tasks.filter(t => t.completed).length;
+
+      progressText.innerText = `${done}/${total}`;
+      progressBar.style.width = total > 0 ? `${(done / total) * 100}%` : "0%";
+
+      if (total > 0 && done === total) {
+        celebrationBox.classList.remove("hidden");
+        celebrationMsg.innerText = `You finished ${total} task(s) today!`;
+
+        setTimeout(() => celebrationBox.classList.add("hidden"), 3000);
+      }
+
+      if (total === 0) {
+        footer.innerText = "Let's get started! 💪";
+      } else if (done === total) {
+        footer.innerText = "Perfect! All done! 🌟";
+      } else {
+        footer.innerText = `Keep going! ${total - done} task(s) remaining 🎯`;
+      }
+    }
+
+    addBtn.addEventListener("click", addTask);
+    taskInput.addEventListener("keypress", e => {
+      if (e.key === "Enter") addTask();
+    });
+  </script>
+</body>
+</html>
